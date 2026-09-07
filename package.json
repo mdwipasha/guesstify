@@ -1,0 +1,36 @@
+{
+  "name": "guesstify",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro check && astro build",
+    "typecheck": "astro check",
+    "test": "vitest run",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@astrojs/react": "latest",
+    "@astrojs/vercel": "latest",
+    "@tailwindcss/vite": "latest",
+    "@supabase/supabase-js": "latest",
+    "astro": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "tailwindcss": "latest"
+  },
+  "devDependencies": {
+    "@eslint/js": "latest",
+    "@astrojs/check": "latest",
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "eslint": "latest",
+    "eslint-plugin-react-hooks": "latest",
+    "globals": "latest",
+    "typescript": "latest",
+    "typescript-eslint": "latest",
+    "vitest": "latest"
+  }
+}
