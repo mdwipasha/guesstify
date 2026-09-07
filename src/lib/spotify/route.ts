@@ -11,6 +11,20 @@ export async function requireUserSession(context: APIContext): Promise<SpotifySe
   return refreshed;
 }
 
+/** Returns a valid refreshed session if one exists, or null without throwing. */
+export async function readOptionalSession(context: APIContext): Promise<SpotifySession | null> {
+  const session = readSession(context.cookies.get(getSessionCookieName())?.value);
+  if (!session) return null;
+  try {
+    const refreshed = await refreshSession(session);
+    if (refreshed.accessToken !== session.accessToken) context.cookies.set(getSessionCookieName(), serializeSession(refreshed), { httpOnly: true, sameSite: "lax", secure: context.url.protocol === "https:", path: "/", maxAge: 60 * 60 * 24 * 30 });
+    return refreshed;
+  } catch {
+    // Session is invalid/expired — treat as logged out for this optional check
+    return null;
+  }
+}
+
 export function errorResponse(error: unknown): Response {
   const apiError = error instanceof SpotifyApiError ? error : new SpotifyApiError("UNKNOWN", error instanceof Error ? error.message : "The request could not be completed.");
   const status = apiError.code === "UNAUTHORIZED" ? 401 : apiError.code === "FORBIDDEN" ? 403 : apiError.code === "NOT_FOUND" ? 404 : apiError.code === "RATE_LIMITED" ? 429 : 500;

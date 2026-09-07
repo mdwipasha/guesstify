@@ -93,7 +93,14 @@ export function SoloQuiz() {
     setError(null); const id = playlistId(publicValue);
     if (!id) { setError("Paste a valid Spotify playlist URL or ID."); return; }
     setLoading("public");
-    try { setSource({ type: "public", playlist: await request<PlaylistSummary>(`/api/spotify/public-playlist?id=${encodeURIComponent(id)}`) }); }
+    try {
+      const playlist = await request<PlaylistSummary>(`/api/spotify/public-playlist?id=${encodeURIComponent(id)}`);
+      if (playlist.trackCount === 0) {
+        setError(`"${playlist.name}" has no tracks. Choose a different playlist.`);
+        return;
+      }
+      setSource({ type: "public", playlist });
+    }
     catch (caught) { setError(caught instanceof Error ? caught.message : "Could not load that public playlist."); }
     finally { setLoading(null); }
   }

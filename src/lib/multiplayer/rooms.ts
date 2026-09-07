@@ -30,7 +30,9 @@ function asMembers(value: unknown): DatabaseMember[] { return Array.isArray(valu
 
 export async function createRoom(input: { source: Source; playlistId?: string; sourceName?: string; rounds: number; session: SpotifySession; spotifyId: string; displayName: string; avatarUrl: string | null }): Promise<PublicRoomState> {
   const client = admin();
-  const token = input.source === "public" ? await getClientCredentialsToken() : input.session.accessToken;
+  // Always prefer the user session token — Spotify Dev Mode 403s Client Credentials on playlist track reads.
+  // Client Credentials are only kept as an unreachable fallback path for safety.
+  const token = input.session.accessToken;
   const trackPath = input.source === "saved" ? "/me/tracks" : input.playlistId ? `/playlists/${encodeURIComponent(input.playlistId)}/tracks` : null;
   if (!trackPath) throw new Error("Choose a valid playlist before creating a room.");
   const questions = createQuestions(await getTracks(token, trackPath), input.rounds);

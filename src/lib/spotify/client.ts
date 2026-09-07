@@ -13,10 +13,12 @@ function credentials(): { clientId: string; clientSecret: string } {
 }
 
 function errorForStatus(status: number): SpotifyApiError {
+  if (status === 400) return new SpotifyApiError("UNKNOWN", "Spotify rejected the request. The session may be invalid — try logging out and back in.");
   if (status === 401) return new SpotifyApiError("UNAUTHORIZED", "Your Spotify session has expired. Please log in again.");
-  if (status === 403) return new SpotifyApiError("FORBIDDEN", "Spotify does not allow access to this music source.");
+  if (status === 403) return new SpotifyApiError("FORBIDDEN", "Spotify blocked access to this content. It may be private, restricted, or unavailable in the current app mode. Try a different source or log in with Spotify.");
   if (status === 404) return new SpotifyApiError("NOT_FOUND", "Spotify could not find that playlist.");
   if (status === 429) return new SpotifyApiError("RATE_LIMITED", "Spotify is busy. Please wait a moment and try again.");
+  if (status >= 500) return new SpotifyApiError("UNKNOWN", "Spotify is temporarily unavailable. Please try again in a moment.");
   return new SpotifyApiError("UNKNOWN", "Spotify could not complete that request.");
 }
 
@@ -62,7 +64,12 @@ export async function spotifyFetch(path: string, accessToken: string): Promise<u
   let response: Response;
   try { response = await fetch(`${SPOTIFY_API}${path}`, { headers: { Authorization: `Bearer ${accessToken}` } }); }
   catch { throw new SpotifyApiError("NETWORK", "Could not reach Spotify. Check your connection and try again."); }
-  if (!response.ok) throw errorForStatus(response.status);
+  if (!response.ok) {
+    // Log the full Spotify error for server-side debugging.
+    const body = await response.text().catch(() => "(unreadable body)");
+    console.error(`[spotify] ${response.status} on ${path} — ${body}`);
+    throw errorForStatus(response.status);
+  }
   return response.json();
 }
 

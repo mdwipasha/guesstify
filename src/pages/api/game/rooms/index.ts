@@ -12,5 +12,10 @@ export const POST: APIRoute = async (context) => {
     const session = await requireUserSession(context); const profile = await getProfile(session.accessToken);
     if (value.sourceName !== undefined && (typeof value.sourceName !== "string" || value.sourceName.length < 1 || value.sourceName.length > 160)) return Response.json({ code: "INVALID_INPUT", message: "Choose a valid music source name." }, { status: 400 });
     return Response.json(await createRoom({ source: value.source, playlistId: value.playlistId as string | undefined, sourceName: value.sourceName as string | undefined, rounds: value.rounds, session, spotifyId: profile.id, displayName: profile.displayName, avatarUrl: profile.imageUrl }), { status: 201 });
-  } catch (error) { return errorResponse(error); }
+  } catch (error) {
+    // Plain Error instances (e.g. createQuestions "too few playable tracks") are user-input problems — 400.
+    // SpotifyApiError subclasses carry structured codes — let errorResponse map them to the right HTTP status.
+    if (error instanceof Error && error.constructor === Error) return Response.json({ code: "INVALID_INPUT", message: error.message }, { status: 400 });
+    return errorResponse(error);
+  }
 };
